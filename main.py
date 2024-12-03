@@ -169,7 +169,6 @@ def run_simulation(env, monitor, prep_units, oper_units, recovery_units):
     patient_counter = 0
     simul_rng = np.random.default_rng()
     
-    # We could also run the simulation for a certain number of patients
     while True:
         
         # Get interarrival time
@@ -206,6 +205,7 @@ def run_samples(n_samples):
             # Create new simulation environment
             env = simpy.Environment()
             
+            # Create resources
             prep_units = simpy.Resource(env, capacity = N_PREP_UNITS[j])
             oper_units = simpy.Resource(env, capacity = N_OPER_UNITS)
             recovery_units = simpy.Resource(env, capacity = N_RECOVERY_UNITS[j])
@@ -213,6 +213,7 @@ def run_samples(n_samples):
             # Create monitor
             monitor = SimulationMonitor(env, prep_units, oper_units, recovery_units)
             
+            # Start patient generation process
             env.process(run_simulation(
                 env, monitor, prep_units, oper_units, recovery_units))    
             
@@ -237,56 +238,66 @@ def calculate_CI(arr):
         loc=np.mean(arr), 
         scale=st.sem(arr))
 
-def calculate_statistics(results):
-    #for n_rooms in N_ROOM_KEYS:
-    n_room_res = results[N_ROOM_KEYS[0]]
-    prep_room_queue = n_room_res[STAT_KEYS[0]]
-    or_queue = n_room_res[STAT_KEYS[1]]
-    
-    prep_room_means = np.mean(prep_room_queue, axis=1)
 
-if __name__ == "__main__":    
-    results = run_samples(N_SAMPLES)
-    
+
+#if __name__ == "__main__":    
+#    results = run_samples(N_SAMPLES)
+#    prep_room_means, prep_room_ci, oper_room_means, oper_room_ci = calculate_statistics(results)
+
+results = run_samples(N_SAMPLES)
+
+#%%
+def calculate_statistics(results):
+    """ 
+    Calculates means and confidence intervals for all 
+    samples in each combination of rooms.
+    """
     prep_room_means = np.zeros((N_SAMPLES, len(N_ROOM_KEYS)))
     prep_room_ci = {n_rooms: np.zeros((N_SAMPLES, 2)) for n_rooms in N_ROOM_KEYS}
-    #prep_room_ci = np.zeros((N_SAMPLES, len(N_ROOM_KEYS)))
     
     oper_room_means = np.zeros((N_SAMPLES, len(N_ROOM_KEYS)))
     oper_room_ci = {n_rooms: np.zeros((N_SAMPLES, 2)) for n_rooms in N_ROOM_KEYS}
-    #oper_room_ci = np.zeros((N_SAMPLES, len(N_ROOM_KEYS)))
     
     for i, n_rooms in enumerate(N_ROOM_KEYS):
         n_room_res = results[n_rooms]
         
-        prep_room_queue = n_room_res[STAT_KEYS[0]]
-        or_queue = n_room_res[STAT_KEYS[1]]
+        prep_room_queue = np.array(n_room_res[STAT_KEYS[0]])
+        or_queue = np.array(n_room_res[STAT_KEYS[1]])
         
-        prep_room_means[:,i] += np.mean(prep_room_queue, axis=1)
-        oper_room_means[:,i] += np.mean(or_queue, axis=1)
+        # Calculate means
+        prep_room_means[:,i] = np.mean(prep_room_queue, axis=1)
+        oper_room_means[:,i] = np.mean(or_queue, axis=1)
         
+        # Calculate confidence intervals
         for j in range(N_SAMPLES):
             prep_ci = calculate_CI(prep_room_queue[j,:])
             oper_ci = calculate_CI(or_queue[j,:])
             
-            prep_room_means[n_rooms][j,:] =  
+            prep_room_ci[n_rooms][j,:] = prep_ci
+            oper_room_ci[n_rooms][j,:] = oper_ci   
+        return (prep_room_means, prep_room_ci, oper_room_means, oper_room_ci)
+    
+stats = calculate_statistics(results)
+    
+    
             
-            
+
+#%%           
         
     
     
     
     
     
-    """
-    print(len(prep_queue_means[0]))
-    print(len(prep_queue_means[1]))
-    for i in range(len(prep_queue_means)):
-        plt.plot(range(len(prep_queue_means[i])), prep_queue_means[i], label=f'sample {i}')
-        
-    plt.legend()
-    plt.show()
-    """
+"""
+print(len(prep_queue_means[0]))
+print(len(prep_queue_means[1]))
+for i in range(len(prep_queue_means)):
+    plt.plot(range(len(prep_queue_means[i])), prep_queue_means[i], label=f'sample {i}')
+    
+plt.legend()
+plt.show()
+"""
 
 
 
