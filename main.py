@@ -239,14 +239,6 @@ def calculate_CI(arr):
         scale=st.sem(arr))
 
 
-
-#if __name__ == "__main__":    
-#    results = run_samples(N_SAMPLES)
-#    prep_room_means, prep_room_ci, oper_room_means, oper_room_ci = calculate_statistics(results)
-
-results = run_samples(N_SAMPLES)
-
-#%%
 def calculate_statistics(results):
     """ 
     Calculates means and confidence intervals for all 
@@ -277,27 +269,14 @@ def calculate_statistics(results):
             oper_room_ci[n_rooms][j,:] = oper_ci   
         return (prep_room_means, prep_room_ci, oper_room_means, oper_room_ci)
     
-stats = calculate_statistics(results)
+
+if __name__ == "__main__":    
+    results = run_samples(N_SAMPLES)
+    prep_room_means, prep_room_ci, oper_room_means, oper_room_ci = calculate_statistics(results)
     
     
             
 
-#%%           
-        
-    
-    
-    
-    
-    
-"""
-print(len(prep_queue_means[0]))
-print(len(prep_queue_means[1]))
-for i in range(len(prep_queue_means)):
-    plt.plot(range(len(prep_queue_means[i])), prep_queue_means[i], label=f'sample {i}')
-    
-plt.legend()
-plt.show()
-"""
 
 
 
